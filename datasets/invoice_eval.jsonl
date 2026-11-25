@@ -1,0 +1,3 @@
+{"id":"eval_001","question":"What is the amount of invoice INV-1002?","expected_answer":"9440"}
+{"id":"eval_002","question":"What is the invoice number for Bright Star Supplies?","expected_answer":"INV-1002"}
+{"id":"eval_003","question":"What is the amount of invoice INV-1001?","expected_answer":"15340"}
