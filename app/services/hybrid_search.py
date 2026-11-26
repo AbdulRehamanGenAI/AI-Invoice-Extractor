@@ -4,8 +4,9 @@ from app.core.logger import logger
 from app.services.bm25_search import search_bm25
 from app.services.embedding_service import generate_embedding
 from app.models.invoice_embedding import InvoiceEmbedding
+from app.core.observability import trace_retrieval
 
-
+@trace_retrieval
 def search_hybrid(
     db: Session,
     query: str,

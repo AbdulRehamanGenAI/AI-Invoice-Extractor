@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from google import genai
+from langfuse import get_client
 import os
 import time
+from app.core.observability import trace_rag_pipeline
 
 from dotenv import load_dotenv
 
@@ -9,7 +11,7 @@ from app.services.semantic_search import search_invoice_embeddings
 
 load_dotenv(override=True)
 
-
+@trace_rag_pipeline
 def answer_invoice_question(
     db: Session,
     question: str,
@@ -48,6 +50,7 @@ def answer_invoice_question(
     model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
     client = genai.Client(api_key=api_key)
+    langfuse = get_client()
 
     # Step 4: Prepare prompt
     prompt = f"""
@@ -82,15 +85,52 @@ User question:
 
     for attempt in range(3):
         try:
-            response = client.models.generate_content(
+            with langfuse.start_as_current_observation(
+                name="gemini-generation",
+                as_type="generation",
                 model=model,
-                contents=prompt,
-                config={"temperature": 0}
-            )
+                model_parameters={
+                    "temperature": 0
+                }
+            ) as generation:
+
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config={"temperature": 0}
+                )
+
+                # Get token usage from Gemini
+                usage = response.usage_metadata
+
+                if usage:
+                    input_tokens = (
+                        usage.prompt_token_count or 0
+                    )
+
+                    output_tokens = (
+                        usage.candidates_token_count or 0
+                    )
+
+                    total_tokens = (
+                        usage.total_token_count or 0
+                    )
+
+                    # Record token usage in Langfuse
+                    generation.update(
+                        usage_details={
+                            "input": input_tokens,
+                            "output": output_tokens,
+                            "total": total_tokens
+                        }
+                    )
+
             break
 
         except Exception as error:
-            print(f"Gemini attempt {attempt + 1} failed: {error}")
+            print(
+                f"Gemini attempt {attempt + 1} failed: {error}"
+            )
 
             if attempt == 2:
                 raise

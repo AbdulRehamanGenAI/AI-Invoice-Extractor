@@ -2,8 +2,9 @@ from sqlalchemy.orm import Session
 from app.models.invoice import Invoice
 from app.models.invoice_embedding import InvoiceEmbedding
 from app.services.embedding_service import generate_embedding
+from app.core.observability import trace_retrieval
 
-
+@trace_retrieval
 def search_invoice_embeddings(
     db: Session,
     question: str,

@@ -1,51 +1,63 @@
 from app.services.rag_evaluation import evaluate_metric
 
+GOLDEN_DATASET = [
+    {
+        "query": "Find invoices from ABC Technologies",
+        "relevant_invoices": ["INV-1001", "INV-1005", "INV-1008"],
+        "reference_answer": "The relevant invoices are INV-1001, INV-1005, and INV-1008."
+    },
+    {
+        "query": "Find invoice INV-1005",
+        "relevant_invoices": ["INV-1005"],
+        "reference_answer": "The invoice found is INV-1005."
+    },
+    {
+        "query": "Find invoice from Bright Star Supplies",
+        "relevant_invoices": ["INV-1002"],
+        "reference_answer": "The invoice found is INV-1002."
+    },
+]
+
 
 def test_rag_evaluation():
 
-    query = "What is the amount of invoice INV-1001?"
+    for test_case in GOLDEN_DATASET:
 
-    answer = "The invoice amount is ₹15,340."
+        query = test_case["query"]
+        reference_answer = test_case["reference_answer"]
 
-    reference_answer = "The invoice amount is ₹15,340."
+        # Temporary answer and context for testing the evaluator
+        answer = reference_answer
+        context = reference_answer
 
-    context = """
-    Invoice Number: INV-1001
-    Vendor: ABC Technologies Pvt. Ltd.
-    Invoice Amount: ₹15,340
-    Currency: INR
-    """
+        print(f"\nQuestion: {query}")
 
-    # 1. Correctness
-    correctness = evaluate_metric(
-        metric_name="Correctness",
-        query=query,
-        answer=answer,
-        context=context,
-        reference_answer=reference_answer
-    )
+        correctness = evaluate_metric(
+            metric_name="Correctness",
+            query=query,
+            answer=answer,
+            context=context,
+            reference_answer=reference_answer
+        )
 
-    # 2. Faithfulness
-    faithfulness = evaluate_metric(
-        metric_name="Faithfulness",
-        query=query,
-        answer=answer,
-        context=context
-    )
+        faithfulness = evaluate_metric(
+            metric_name="Faithfulness",
+            query=query,
+            answer=answer,
+            context=context
+        )
 
-    # 3. Context Relevance
-    context_relevance = evaluate_metric(
-        metric_name="Context Relevance",
-        query=query,
-        answer=answer,
-        context=context
-    )
+        context_relevance = evaluate_metric(
+            metric_name="Context Relevance",
+            query=query,
+            answer=answer,
+            context=context
+        )
 
-    print("\nRAG Evaluation Results")
+        print("Correctness:", correctness)
+        print("Faithfulness:", faithfulness)
+        print("Context Relevance:", context_relevance)
 
-    print("Correctness:", correctness)
-    print("Faithfulness:", faithfulness)
-    print("Context Relevance:", context_relevance)
 
 if __name__ == "__main__":
     test_rag_evaluation()
