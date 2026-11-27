@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 from app.schemas.invoice import InvoiceCreate, InvoiceResponse
 from app.db.session import Base, engine, get_db
@@ -442,3 +442,23 @@ def ask_invoice_question(
         db=db,
         question=request.question
     )
+    
+    
+from app.services.invoice_agent import ask_invoice_agent
+
+router = APIRouter()
+
+
+class AgentQuestion(BaseModel):
+    question: str
+
+
+@app.post("/invoices/agent")
+def invoice_agent_endpoint(request: AgentQuestion):
+
+    answer = ask_invoice_agent(request.question)
+
+    return {
+        "question": request.question,
+        "answer": answer
+    }
